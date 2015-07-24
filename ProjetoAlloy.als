@@ -1,8 +1,7 @@
 module SistemaDePermissao
 
 	sig Diretorio{
-		diretoriopai: lone Diretorio,
-		arquivos: set Arquivo
+		diretoriopai: lone Diretorio
 }
 	fact {
 		all d: Diretorio | d !in d.^diretoriopai
@@ -11,6 +10,7 @@ module SistemaDePermissao
 }
 
 	sig Arquivo{
+		diretorio: one Diretorio
 }
 
 	one sig Root extends Diretorio {}
