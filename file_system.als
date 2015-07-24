@@ -1,5 +1,6 @@
 module SistemaDePermissao
 
+sig User{}
 sig Dir{
 	parent: lone Dir
 }
