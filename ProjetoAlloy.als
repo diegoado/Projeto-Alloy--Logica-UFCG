@@ -1,17 +1,18 @@
-module SistemaDePermissao
+module PermissionSytem
 
-	sig Diretorio{
-		diretoriospais: lone Diretorio,
-		arquivos: set Arquivo
-}{
-		this !in this.^@diretoriospais
-		this != Root => Root in this.^@diretoriospais
+sig Dir {
+	parent: lone Dir,
+	files: set File
+}
+{
+	this !in this.^@parent
+	this != Root => Root in this.^@parent
 }
 
-	sig Arquivo{
+sig File {
 }
 
-	one sig Root extends Diretorio {}{ no this.@diretoriospais}
+one sig Root extends Dir{}{ no this.@parent}
 
-	pred show[]{}
-	run show for 3
+pred show[]{}
+run show for 3
