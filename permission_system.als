@@ -1,15 +1,18 @@
 module PermissionSystem
 
-sig User{}
+-- Restringir que não pode haver permissão sem diretório
+
+--sig User{}
+--sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
 
 sig Permissao{}
-sig Leitura in Permissao{}
-sig LeituraEscrita in Permissao{}
-sig Dono in Permissao{}
+sig Leitura, LeituraEscrita, Dono extends Permissao{}
+
 
 sig Dir{
 	parent: lone Dir,
-	premissao : one Permissao
+	premissao : one Permissao,
+	--usuario : one User
 }
 
 one sig Root extends Dir {}
@@ -19,6 +22,7 @@ fact {
 	all d: Dir | (d != Root) => (Root in d.^parent)
 	no Root.parent
 	Permissao = Leitura + LeituraEscrita + Dono
+	--User = ParaTodos + UsuariosExternos + UsuariosDesteComputador
 }
 
 sig File{
