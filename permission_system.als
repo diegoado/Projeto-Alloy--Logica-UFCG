@@ -5,16 +5,17 @@ abstract sig User{
 }
 one sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
  
-abstract sig Permissao{}
+abstract sig Permissao{
+	obj: set Object 
+}
 one sig Leitura, LeituraEscrita, Dono extends Permissao{}
  
 abstract sig Object {
 	parent: lone Dir,
+--	usuario: one User
 }
  
-sig Dir extends Object{}
-
-sig File extends Object{}
+sig Dir, File extends Object{}
 
 one sig Root extends Dir {}
  
