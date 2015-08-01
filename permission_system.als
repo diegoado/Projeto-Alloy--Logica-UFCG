@@ -1,38 +1,28 @@
-module PermissionSystem
+module SistemaDePermissão
 
---Novo Branch
 abstract sig User{
-	permissoes: Object -> one Permissao
+		leitura: set Object,
+		escrita: set Object,
+		dono : set Object
 }
 one sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
- 
-abstract sig Permissao{}
-one sig Leitura, LeituraEscrita, Dono extends Permissao{}
- 
-abstract sig Object {
-	parent: lone Dir,
+
+abstract sig Object {}
+one sig Root extends Object{
+	filho : set Object
 }
- 
-sig Dir extends Object{}
-
-sig File extends Object{}
-
-one sig Root extends Dir {}
- 
-fact {
-		all o: Object | (o != Root) => #(o.parent) = 1
-        no Root.parent
-        all d: Dir | d !in d.^parent
-        all d: Dir | (d != Root) => (Root in d.^parent)
-		all u: User, o: Object | (o.(u.permissoes) = LeituraEscrita) => ( Leitura !in (o.^parent).(u.permissoes))
-		all u: User, o: Object | (o.(u.permissoes) = Dono) => (all permissao: (o.^parent).(u.permissoes) | permissao = Dono)
+some sig Dir extends Object{
+	filho : set Object
 }
+some sig File extends Object{}
 
-assert teste{
-	all u: User, o: Object | #(o.(u.permissoes)) = 1
+
+fact{
+	all u: User| #(u.leitura& u.escrita) = 0 && #(u.leitura& u.dono) = 0 && #(u.dono& u.escrita) = 0 && #(u.leitura& u.escrita& u.dono) =0
+	all u: User| u.leitura + u.escrita + u.dono = Object
+	all r: Root , d: Dir| !(r in d.filho) && !(d in d.filho)
+	all r:Root, d:Dir| d in r.filho || some d2:Dir| d in d2
+	--all u:User, o:Object| 
 }
-
---check teste
- 
 pred show[]{}
 run show for 5
