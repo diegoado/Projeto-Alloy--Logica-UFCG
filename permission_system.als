@@ -1,5 +1,6 @@
 module PermissionSystem
 
+--Novo Branch
 abstract sig User{
 	permissoes: Object -> one Permissao
 }
