@@ -24,6 +24,9 @@ fact{
 	all o: Object | (o != Root) => (o in Root.^filho)
 	no d: Dir | d in d.^filho
 	all o: Object | (o != Root) => one d: Dir | o in d.filho
+
+	all o: Object, u: User | (o in u.leitura) => (all filhos: o.^filho | filhos in u.leitura)
+	all o: Object, u: User | (o in u.escrita) => (all filhos: o.^filho | filhos !in u.dono)
 }
 
 pred show[]{}
