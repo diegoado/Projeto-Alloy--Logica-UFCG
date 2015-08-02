@@ -1,37 +1,30 @@
-module PermissionSystem
+module SistemaDePermissão
 
 abstract sig User{
-	permissoes: Object -> one Permissao
+		leitura: set Object,
+		escrita: set Object,
+		dono : set Object
 }
 one sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
- 
-abstract sig Permissao{}
-one sig Leitura, LeituraEscrita, Dono extends Permissao{}
- 
-abstract sig Object {
-	parent: lone Dir,
+
+abstract sig Object {}
+
+one sig Root extends Dir{}
+
+sig Dir extends Object{
+	filho : set Object
 }
- 
-sig Dir extends Object{}
 
 sig File extends Object{}
 
-one sig Root extends Dir {}
- 
-fact {
-		all o: Object | (o != Root) => #(o.parent) = 1
-        no Root.parent
-        all d: Dir | d !in d.^parent
-        all d: Dir | (d != Root) => (Root in d.^parent)
-		all u: User, o: Object | (o.(u.permissoes) = LeituraEscrita) => ( Leitura !in (o.^parent).(u.permissoes))
-		all u: User, o: Object | (o.(u.permissoes) = Dono) => (all permissao: (o.^parent).(u.permissoes) | permissao = Dono)
+
+fact{
+	all u: User| no(u.leitura &  u.escrita) && no(u.leitura &  u.dono) && no(u.dono &  u.escrita)
+	all u: User| u.leitura + u.escrita + u.dono = Object
+	all o: Object | (o != Root) => (o in Root.^filho)
+	no d: Dir | d in d.^filho
+	all o: Object | (o != Root) => one d: Dir | o in d.filho
 }
 
-assert teste{
-	all u: User, o: Object | #(o.(u.permissoes)) = 1
-}
-
---check teste
- 
 pred show[]{}
-run show for 5
+run show for 4
