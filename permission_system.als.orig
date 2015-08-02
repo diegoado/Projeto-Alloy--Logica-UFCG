@@ -6,16 +6,19 @@ abstract sig User{
 		dono : set Object
 }
 one sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
+<<<<<<< HEAD
 
 abstract sig Object {}
-	filho : set Object
- 
-
-one sig Root extends Dir{}
-some sig Dir extends Object{
+one sig Root extends Object{
 	filho : set Object
 }
-some sig File extends Object{}
+some sig Dir extends Object{
+	filho : set Object
+=======
+
+abstract sig Object {}
+
+one sig Root extends Dir{}
 
 sig Dir extends Object{
 	filho : set Object
@@ -33,7 +36,23 @@ fact{
 
 	all o: Object, u: User | (o in u.leitura) => (all filhos: o.^filho | filhos in u.leitura)
 	all o: Object, u: User | (o in u.escrita) => (all filhos: o.^filho | filhos !in u.dono)
+>>>>>>> Renato
 }
+some sig File extends Object{}
 
+<<<<<<< HEAD
+
+fact{
+	all u: User| #(u.leitura& u.escrita) = 0 && #(u.leitura& u.dono) = 0 && #(u.dono& u.escrita) = 0 && #(u.leitura& u.escrita& u.dono) =0
+	all u: User| u.leitura + u.escrita + u.dono = Object
+	all r: Root , d: Dir| !(r in d.filho) && !(d in d.filho)
+	all r:Root, d:Dir| d in r.filho ||some d2:Dir| d in d2.filho
+	all f:File, d:Dir, r:Root | f in r.filho || f in d.filho
+	--all u:User, o:Object| 
+}
+pred show[]{}
+run show for 17
+=======
 pred show[]{}
 run show for 4
+>>>>>>> Renato
