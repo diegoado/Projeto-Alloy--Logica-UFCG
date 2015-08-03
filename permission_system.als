@@ -21,18 +21,18 @@ sig Dir extends Object{
 sig File extends Object{}
 
 pred init[t: Time] {
-	one Object
+	all u: User | (u.leitura).t + (u.escrita).t + (u.dono).t = Root
 }
 
 fact{
-	all u: User, t: Time | no(t.~(u.leitura) &  t.~(u.escrita)) && no(t.~(u.leitura) &  t.~(u.dono)) && no(t.~(u.dono) &  t.~(u.escrita))
-	all u: User, t: Time | t.~(u.leitura) + t.~(u.escrita) + t.~(u.dono) = Object
+	all u: User, t: Time | no((u.leitura).t &  (u.escrita).t) && no((u.leitura).t &  (u.dono).t) && no((u.dono).t &  (u.escrita).t)
+	all u: User, t: Time | (u.leitura).t + (u.escrita).t + (u.dono).t = Object
 	all o: Object, t: Time | (o != Root) => (o in Root.^(filho.t))
 	no d: Dir, t: Time | d in d.^(filho.t)
-	all o: Object, t: Time | (o != Root) => one d: Dir | o in t.~(d.filho)
+	all o: Object, t: Time | (o != Root) => one d: Dir | o in (d.filho).t
 
-	all o: Object, u: User | (o in u.leitura) => (all filhos: o.^filho | filhos in u.leitura)
-	all o: Object, u: User | (o in u.escrita) => (all filhos: o.^filho | filhos !in u.dono)
+	all o: Object, u: User, t: Time | (o in (u.leitura).t) => (o.^(filho.t) in (u.leitura).t)
+	all o: Object, u: User, t: Time | (o in (u.escrita).t) => (all filhos: o.^(filho.t) | filhos !in (u.dono).t)
 }
 
 pred addObject[o:Object,d:Dir,t,t': Time]{
@@ -47,4 +47,4 @@ fact traces {
 }
 
 pred show[]{}
-run show for 4
+run show for 5
