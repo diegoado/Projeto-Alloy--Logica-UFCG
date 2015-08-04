@@ -38,13 +38,26 @@ fact{
 pred addObject[o:Object,d:Dir,ti,tf: Time]{
 	o !in Root.^(filho.ti)
 	Root.^(filho.tf) = Root.^(filho.ti) + o
+	User.leitura.tf - o = User.leitura.ti
+	User.escrita.tf - o = User.escrita.ti
+	User.dono.tf - o = User.dono.ti
 	(d.filho).tf = (d.filho).ti + o
+}
+
+pred switchPermission[o:Object, u:User, ti,tf:Time]{
+	o in u.dono.ti
+	o in u.(leitura + escrita).tf
+--	(o in u.escrita.ti) => o !in u.escrita.tf
+--	(o in u.leitura.ti) => o !in u.leitura.tf
 }
 
 fact traces {
 	init[first]
 	all pre: Time-last | let pos = pre.next |
-		one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos]
+		--one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] &&
+		--not (one o: Object, u: User | switchPermission[o,u,pre,pos]) ||
+		one o: (User.dono.pre), u: User | switchPermission[o,u,pre,pos]-- &&
+		--not (one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos])
 }
 
 assert teste{
@@ -54,7 +67,7 @@ assert teste{
 	all u: User, o: Object, t: Time | (o in u.dono.t) =>  o !in (u.leitura + u.escrita).t
 }
 
-check teste
+--check teste
 
 pred show[]{}
-run show for 7
+run show for 3 but 5 Time
