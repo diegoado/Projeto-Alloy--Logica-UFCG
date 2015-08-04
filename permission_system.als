@@ -47,7 +47,9 @@ pred addObject[o:Object,d:Dir,ti,tf: Time]{
 pred switchPermission[o:Object, u:User, ti,tf:Time]{
 	o in u.dono.ti
 	o in u.(leitura + escrita).tf
-	u.(leitura + escrita + dono).ti = u.(leitura + escrita + dono).tf
+	u.(leitura + escrita).tf = u.(leitura + escrita).ti + o
+	all u2: User - u | u2.leitura.ti = u2.leitura.tf && u2.escrita.ti = u2.escrita.tf && u2.dono.ti = u2.dono.tf
+	
 --	(o in u.escrita.ti) => o !in u.escrita.tf
 --	(o in u.leitura.ti) => o !in u.leitura.tf
 }
@@ -57,7 +59,7 @@ fact traces {
 	all pre: Time-last | let pos = pre.next |
 		--one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] &&
 		--not (one o: Object, u: User | switchPermission[o,u,pre,pos]) ||
-		some u: User, o: Object | switchPermission[o,u,pre,pos]-- &&
+		one u: User, o: Object | switchPermission[o,u,pre,pos]-- &&
 		--not (one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos])
 }
 
@@ -71,4 +73,4 @@ assert teste{
 --check teste
 
 pred show[]{}
-run show for 3 but 5 Time
+run show for 3 but 7 Time
