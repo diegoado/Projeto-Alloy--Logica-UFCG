@@ -32,7 +32,7 @@ fact{
 	all u: User, t: Time | no((u.leitura).t &  (u.escrita).t) && no((u.leitura).t &  (u.dono).t) && no((u.dono).t &  (u.escrita).t)
 	all u: User, t: Time | (u.leitura).t + (u.escrita).t + (u.dono).t = Root.^(filho.t) + Root
 	all d: Dir, t: Time | Root !in d.filho.t
-	all d: Dir, t: Time | (d !in Root.^(filho.t) => no d.filho
+	all d: Dir, t: Time | (d !in Root.^(filho.t) && d != Root) => no d.filho.t
 	no d: Dir, t: Time | d in d.^(filho.t)
 	all o: Object, t: Time | lone d: Dir | o in (d.filho).t
 
