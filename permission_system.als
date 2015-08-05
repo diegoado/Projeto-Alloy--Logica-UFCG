@@ -1,37 +1,74 @@
 module SistemaDePermissão
+open util/ordering[Time]
+
+sig Time{}
 
 abstract sig User{
-		leitura: set Object,
-		escrita: set Object,
-		dono : set Object
+		leitura: Object -> Time,
+		escrita: Object -> Time,
+		dono : Object -> Time
 }
 one sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
 
-abstract sig Object{}
-
-sig File extends Object{} 
+abstract sig Object {}
 one sig Root extends Dir{}
 sig Dir extends Object{
-	filho : set Object
+	filho : Object -> Time
 }
+sig File extends Object{}
+
+--pred init[t: Time] {}
 
 fact{
 	all u: User| no(u.leitura &  u.escrita) && no(u.leitura &  u.dono) && no(u.dono &  u.escrita)
-	all u: User, r:Root| u.leitura + u.escrita + u.dono = r+ r.^filho
---	all d: Dir, r :Root| (d !in r.^filho)=> no d.filho -- ??
-	no d: Dir | d in d.^filho
-	all o: Object, r: Root | (o in r.^filho) => one d: Dir | o in d.filho
-	all o: Object, u: User | (o in u.leitura) => (o.^filho in u.leitura)
-	all o: Object, u: User | (o in u.escrita) => (all filhos: o.^filho | filhos !in u.dono)
+	all u: User, t: Time | (u.leitura + u.escrita + u.dono).t = Root + Root.^(filho.t)
+	all d: Dir, t: Time | Root !in d.filho.t
+	no d: Dir, t: Time | d in d.^(filho.t)
+	all d: Dir, t: Time | (d != Root &&d !in Root.^(filho.t)) => no d.filho.t
+	--all o: Object, t: Time | lone d: Dir | o in (d.filho).t
+	all o: Object, u: User, t: Time | (o in (u.leitura).t) => (o.^(filho.t) in u.leitura.t)
+	all o: Object, u: User, t: Time | (o in (u.escrita).t) => (all filhos: o.^(filho.t) | filhos !in u.dono.t)
+}
+
+pred addObject[o:Object,d:Dir,ti,tf: Time]{
+	o !in Root.^(filho.ti)
+	Root.^(filho.tf) = Root.^(filho.ti) + o
+	User.leitura.tf - o = User.leitura.ti
+	User.escrita.tf - o = User.escrita.ti
+	User.dono.tf - o = User.dono.ti
+	(d.filho).tf = (d.filho).ti + o
+}
+
+pred switchPermission[o:Object, u:User, ti,tf:Time]{
+	o in u.dono.ti
+	o in u.(leitura + escrita).tf
+	u.(leitura + escrita).tf = u.(leitura + escrita).ti + o
+	all u2: User - u | u2.leitura.ti = u2.leitura.tf && u2.escrita.ti = u2.escrita.tf && u2.dono.ti = u2.dono.tf
+	--	(o in u.escrita.ti) => o !in u.escrita.tf
+	--	(o in u.leitura.ti) => o !in u.leitura.tf
+}
+
+pred removeObject[o:Object, ti,tf:Time]{ 
+--	o in	Root.^(filho.ti)
+	o !in Root.^(filho.tf)
+	Root.^(filho.tf) = Root.^(filho.ti) + o
+}
+
+fact traces {
+--	init[first]
+	all pre: Time-last | let pos = pre.next |
+		--one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] 
+		--one u: User, o: Object | switchPermission[o,u,pre,pos]
+		  one o: (Root + Root.^(filho.pre))| removeObject[o,pre,pos]
 }
 
 assert teste{
- 	all u: User, o: Object | o in (u.leitura + u.escrita + u.dono)
-	all u: User, o: Object | (o in u.leitura) => (o.^filho in u.leitura)
-	all u: User, o: Object | (o in u.escrita) => (all filhos: o.^filho | filhos !in u.dono)
-	all r: Root, o: Object  | (o != Root) => (o in r.^filho)
+	all u: User, o: Object, t: Time | (o !in Root.^(filho.t) && o != Root)=> o !in (u.leitura + u.escrita + u.dono).t
+	all u: User, o: Object, t: Time | (o in u.leitura.t) => (o.^(filho.t) in u.leitura.t)
+	all u: User, o: Object, t: Time | (o in u.escrita.t) => (all filhos: o.^(filho.t) | filhos !in u.dono.t)
+	all u: User, o: Object, t: Time | (o in u.dono.t) =>  o !in (u.leitura + u.escrita).t
 }
 
 check teste
 pred show[]{}
-run show for 5
+run show for 3 but 7 Time
