@@ -17,7 +17,7 @@ sig Dir extends Object{
 }
 sig File extends Object{}
 
---pred init[t: Time] {}
+pred init[t: Time] {}
 
 fact{
 	all u: User| no(u.leitura &  u.escrita) && no(u.leitura &  u.dono) && no(u.dono &  u.escrita)
@@ -25,7 +25,7 @@ fact{
 	all d: Dir, t: Time | Root !in d.filho.t
 	no d: Dir, t: Time | d in d.^(filho.t)
 	all d: Dir, t: Time | (d != Root &&d !in Root.^(filho.t)) => no d.filho.t
-	--all o: Object, t: Time | lone d: Dir | o in (d.filho).t
+	all o: Object, t: Time | lone d: Dir | o in (d.filho).t
 	all o: Object, u: User, t: Time | (o in (u.leitura).t) => (o.^(filho.t) in u.leitura.t)
 	all o: Object, u: User, t: Time | (o in (u.escrita).t) => (all filhos: o.^(filho.t) | filhos !in u.dono.t)
 }
@@ -37,29 +37,37 @@ pred addObject[o:Object,d:Dir,ti,tf: Time]{
 	User.escrita.tf - o = User.escrita.ti
 	User.dono.tf - o = User.dono.ti
 	(d.filho).tf = (d.filho).ti + o
+	all u2: User | u2.leitura.ti = u2.leitura.tf - o && u2.escrita.ti = u2.escrita.tf - o && u2.dono.ti = u2.dono.tf - o
+	all d2: Dir - d | d2.filho.tf = d2.filho.ti
 }
 
+-- Troca de permissão sem necessidade
+-- Troca 2 usuarios ao mesmo tempo
 pred switchPermission[o:Object, u:User, ti,tf:Time]{
 	o in u.dono.ti
 	o in u.(leitura + escrita).tf
 	u.(leitura + escrita).tf = u.(leitura + escrita).ti + o
 	all u2: User - u | u2.leitura.ti = u2.leitura.tf && u2.escrita.ti = u2.escrita.tf && u2.dono.ti = u2.dono.tf
+	all d: Dir | d.filho.tf = d.filho.ti
 	--	(o in u.escrita.ti) => o !in u.escrita.tf
 	--	(o in u.leitura.ti) => o !in u.leitura.tf
 }
 
-pred removeObject[o:Object, ti,tf:Time]{ 
---	o in	Root.^(filho.ti)
+pred removeObject[o:Object, u: User, ti,tf:Time]{
+	o in u.dono.ti
+	o in	Root.^(filho.ti)
 	o !in Root.^(filho.tf)
-	Root.^(filho.tf) = Root.^(filho.ti) + o
+	Root.^(filho.tf) = Root.^(filho.ti) - (o + o.^(filho.ti))
+	all u2: User  | u2.leitura.tf = u2.leitura.ti - (o + o.^(filho.ti)) && u2.escrita.tf = u2.escrita.ti - (o + o.^(filho.ti)) && u2.dono.tf = u2.dono.ti - (o + o.^(filho.ti))
+	all d: Dir | d.filho.tf = d.filho.ti - (o + o.^(filho.ti))
+
 }
 
 fact traces {
---	init[first]
 	all pre: Time-last | let pos = pre.next |
-		--one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] 
-		--one u: User, o: Object | switchPermission[o,u,pre,pos]
-		  one o: (Root + Root.^(filho.pre))| removeObject[o,pre,pos]
+--		one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] --or
+		one u: User, o: Object | switchPermission[o,u,pre,pos] --or
+--		one o: (Root + Root.^(filho.pre)), u: User| removeObject[o,u,pre,pos]
 }
 
 assert teste{
@@ -71,4 +79,4 @@ assert teste{
 
 check teste
 pred show[]{}
-run show for 3 but 7 Time
+run show for 4 but 3 Time
