@@ -48,8 +48,6 @@ pred switchPermission[o:Object, u:User, ti,tf:Time]{
 	u.escrita.ti = u.escrita.tf - (o + o.^(filho.ti))
 	all u2: User - u | u2.leitura.tf = u2.leitura.ti && u2.escrita.tf = u2.escrita.ti && u2.dono.tf = u2.dono.ti
 	all d: Dir | d.filho.tf = d.filho.ti
-	--	(o in u.escrita.ti) => o !in u.escrita.tf
-	--	(o in u.leitura.ti) => o !in u.leitura.tf
 }
 
 pred removeObject[o:Object, u: User, ti,tf:Time]{
@@ -64,9 +62,9 @@ pred removeObject[o:Object, u: User, ti,tf:Time]{
 
 fact traces {
 	all pre: Time-last | let pos = pre.next |
---		one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] --or
-		one u: User, o:( u.dono.pre )| switchPermission[o,u,pre,pos] --or
---		one o: (Root + Root.^(filho.pre)), u: User| removeObject[o,u,pre,pos]
+		some d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] or
+		some u: User, o:( u.dono.pre )| switchPermission[o,u,pre,pos] or
+		some o: (Root + Root.^(filho.pre)), u: User| removeObject[o,u,pre,pos]
 }
 
 assert teste{
@@ -78,4 +76,4 @@ assert teste{
 
 check teste
 pred show[]{}
-run show for 4 but 5 Time
+run show for 5 but 15 Time
