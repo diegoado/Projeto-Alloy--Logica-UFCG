@@ -11,13 +11,11 @@ abstract sig User{
 one sig ParaTodos, UsuariosExternos, UsuariosDesteComputador extends User{}
 
 abstract sig Object {}
-one sig Root extends Dir{}
+sig File extends Object{}
 sig Dir extends Object{
 	filho : Object -> Time
 }
-sig File extends Object{}
-
-pred init[t: Time] {}
+one sig Root extends Dir{}
 
 fact{
 	all u: User| no(u.leitura &  u.escrita) && no(u.leitura &  u.dono) && no(u.dono &  u.escrita)
@@ -41,13 +39,14 @@ pred addObject[o:Object,d:Dir,ti,tf: Time]{
 	all d2: Dir - d | d2.filho.tf = d2.filho.ti
 }
 
--- Troca de permissão sem necessidade
--- Troca 2 usuarios ao mesmo tempo
+-- Troca de permissão sem necessidade, Troca 2 usuarios ao mesmo tempo
+--  Aparentemente problema resolvido
 pred switchPermission[o:Object, u:User, ti,tf:Time]{
-	o in u.dono.ti
 	o in u.(leitura + escrita).tf
-	u.(leitura + escrita).tf = u.(leitura + escrita).ti + o
-	all u2: User - u | u2.leitura.ti = u2.leitura.tf && u2.escrita.ti = u2.escrita.tf && u2.dono.ti = u2.dono.tf
+--	u.(leitura + escrita).tf = u.(leitura + escrita).ti + o + o.^(filho.ti)
+	u.leitura.ti = u.leitura.tf - (o + o.^(filho.ti))
+	u.escrita.ti = u.escrita.tf - (o + o.^(filho.ti))
+	all u2: User - u | u2.leitura.tf = u2.leitura.ti && u2.escrita.tf = u2.escrita.ti && u2.dono.tf = u2.dono.ti
 	all d: Dir | d.filho.tf = d.filho.ti
 	--	(o in u.escrita.ti) => o !in u.escrita.tf
 	--	(o in u.leitura.ti) => o !in u.leitura.tf
@@ -66,7 +65,7 @@ pred removeObject[o:Object, u: User, ti,tf:Time]{
 fact traces {
 	all pre: Time-last | let pos = pre.next |
 --		one d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] --or
-		one u: User, o: Object | switchPermission[o,u,pre,pos] --or
+		one u: User, o:( u.dono.pre )| switchPermission[o,u,pre,pos] --or
 --		one o: (Root + Root.^(filho.pre)), u: User| removeObject[o,u,pre,pos]
 }
 
@@ -79,4 +78,4 @@ assert teste{
 
 check teste
 pred show[]{}
-run show for 4 but 3 Time
+run show for 4 but 5 Time
