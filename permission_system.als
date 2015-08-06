@@ -60,7 +60,12 @@ pred removeObject[o:Object, u: User, ti,tf:Time]{
 
 }
 
+pred init[t :Time]{
+	no Root.filho.t
+}
+
 fact traces {
+	init[first]
 	all pre: Time-last | let pos = pre.next |
 		some d: (Root + Root.^(filho.pre)), o: Object | addObject[o,d,pre,pos] or
 		some u: User, o:( u.dono.pre )| switchPermission[o,u,pre,pos] or
