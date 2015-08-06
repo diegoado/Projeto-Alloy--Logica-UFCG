@@ -39,11 +39,8 @@ pred addObject[o:Object,d:Dir,ti,tf: Time]{
 	all d2: Dir - d | d2.filho.tf = d2.filho.ti
 }
 
--- Troca de permissão sem necessidade, Troca 2 usuarios ao mesmo tempo
---  Aparentemente problema resolvido
 pred switchPermission[o:Object, u:User, ti,tf:Time]{
 	o in u.(leitura + escrita).tf
---	u.(leitura + escrita).tf = u.(leitura + escrita).ti + o + o.^(filho.ti)
 	u.leitura.ti = u.leitura.tf - (o + o.^(filho.ti))
 	u.escrita.ti = u.escrita.tf - (o + o.^(filho.ti))
 	all u2: User - u | u2.leitura.tf = u2.leitura.ti && u2.escrita.tf = u2.escrita.ti && u2.dono.tf = u2.dono.ti
@@ -57,7 +54,6 @@ pred removeObject[o:Object, u: User, ti,tf:Time]{
 	Root.^(filho.tf) = Root.^(filho.ti) - (o + o.^(filho.ti))
 	all u2: User  | u2.leitura.tf = u2.leitura.ti - (o + o.^(filho.ti)) && u2.escrita.tf = u2.escrita.ti - (o + o.^(filho.ti)) && u2.dono.tf = u2.dono.ti - (o + o.^(filho.ti))
 	all d: Dir | d.filho.tf = d.filho.ti - (o + o.^(filho.ti))
-
 }
 
 pred init[t :Time]{
