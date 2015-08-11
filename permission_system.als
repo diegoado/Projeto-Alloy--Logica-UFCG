@@ -20,7 +20,7 @@ one sig Root extends Dir{}
 fact{
 	all u: User| no(u.leitura &  u.escrita) && no(u.leitura &  u.dono) && no(u.dono &  u.escrita)
 	all u: User, t: Time | (u.leitura + u.escrita + u.dono).t = Root + Root.^(filho.t)
-	all d: Dir, t: Time | Root !in d.filho.t
+	Root !in Dir.filho.Time
 	no d: Dir, t: Time | d in d.^(filho.t)
 	all d: Dir, t: Time | (d != Root &&d !in Root.^(filho.t)) => no d.filho.t
 	all o: Object, t: Time | lone d: Dir | o in (d.filho).t
